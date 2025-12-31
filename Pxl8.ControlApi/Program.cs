@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Pxl8.ControlApi.Data;
+using Pxl8.ControlApi.Middleware;
+using Pxl8.ControlApi.Security;
 using Pxl8.ControlApi.Services.Budget;
 using Pxl8.ControlApi.Services.Policy;
 using Pxl8.ControlApi.Services.Usage;
@@ -12,6 +14,9 @@ var connectionString = builder.Configuration.GetConnectionString("ControlDb")
 
 builder.Services.AddDbContext<ControlDbContext>(options =>
     options.UseNpgsql(connectionString));
+
+// Security
+builder.Services.AddSingleton<InterPlaneHmacService>();
 
 // Services
 builder.Services.AddScoped<IBudgetAllocatorService, BudgetAllocatorService>();
@@ -31,6 +36,9 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+// HMAC authentication middleware (must be before MapControllers)
+app.UseMiddleware<HmacAuthenticationMiddleware>();
 
 app.MapControllers();
 
