@@ -1,0 +1,6 @@
+@Pxl8.ControlApi_HostAddress = http://localhost:5196
+
+GET {{Pxl8.ControlApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
