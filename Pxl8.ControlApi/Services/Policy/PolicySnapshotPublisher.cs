@@ -30,25 +30,36 @@ public class PolicySnapshotPublisher : IPolicySnapshotPublisher
 
     public async Task<PolicySnapshotDto> GenerateSnapshotAsync(CancellationToken cancellationToken = default)
     {
-        // 1. Get all active tenant IDs from BillingPeriods
-        var activeTenantIds = await _db.BillingPeriods
-            .Select(p => p.TenantId)
-            .Distinct()
+        var now = DateTimeOffset.UtcNow;
+
+        // 1. Get all active tenants with their current billing period
+        var tenantsWithPeriods = await _db.BillingPeriods
+            .GroupBy(p => p.TenantId)
+            .Select(g => new
+            {
+                TenantId = g.Key,
+                // Current period: active now OR most recent
+                CurrentPeriod = g
+                    .Where(p => p.StartsAt <= now && now < p.EndsAt)
+                    .OrderByDescending(p => p.StartsAt)
+                    .FirstOrDefault() ?? g.OrderByDescending(p => p.StartsAt).First()
+            })
             .ToListAsync(cancellationToken);
 
-        _logger.LogInformation("Generating policy snapshot for {TenantCount} active tenants", activeTenantIds.Count);
+        _logger.LogInformation("Generating policy snapshot for {TenantCount} active tenants", tenantsWithPeriods.Count);
 
         // 2. Generate TenantPolicyDto for each tenant
-        var tenantPolicies = activeTenantIds.Select(tenantId => new TenantPolicyDto
+        var tenantPolicies = tenantsWithPeriods.Select(t => new TenantPolicyDto
         {
-            TenantId = tenantId,
+            TenantId = t.TenantId,
+            CurrentPeriodId = t.CurrentPeriod.PeriodId,
             Status = "active", // TODO: Load from Tenants table
             PlanCode = "free", // TODO: Load from Tenants table
             Quotas = new QuotasDto
             {
-                BandwidthLimitBytes = DefaultBandwidthLimitBytes,
-                TransformsLimit = DefaultTransformsLimit,
-                StorageLimitBytes = DefaultStorageLimitBytes,
+                BandwidthLimitBytes = t.CurrentPeriod.BandwidthLimit,
+                TransformsLimit = t.CurrentPeriod.TransformsLimit,
+                StorageLimitBytes = t.CurrentPeriod.StorageLimit,
                 DomainsLimit = 10
             },
             Domains = new List<DomainDto>(), // TODO: Load from Domains table

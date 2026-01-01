@@ -7,6 +7,9 @@ public record TenantPolicyDto
     [JsonPropertyName("tenant_id")]
     public required Guid TenantId { get; init; }
 
+    [JsonPropertyName("current_period_id")]
+    public required Guid CurrentPeriodId { get; init; }
+
     [JsonPropertyName("status")]
     public required string Status { get; init; }
 
