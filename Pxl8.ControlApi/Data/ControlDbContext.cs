@@ -98,6 +98,9 @@ public class ControlDbContext : DbContext
             entity.Property(e => e.EndsAt).HasColumnName("ends_at");
             entity.Property(e => e.BandwidthConsumedBytes).HasColumnName("bandwidth_consumed_bytes");
             entity.Property(e => e.TransformsConsumed).HasColumnName("transforms_consumed");
+            entity.Property(e => e.BandwidthLimit).HasColumnName("bandwidth_limit");
+            entity.Property(e => e.TransformsLimit).HasColumnName("transforms_limit");
+            entity.Property(e => e.StorageLimit).HasColumnName("storage_limit");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
 
             // Indexes

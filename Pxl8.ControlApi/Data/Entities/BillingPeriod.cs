@@ -51,6 +51,21 @@ public class BillingPeriod
     public int TransformsConsumed { get; set; }
 
     /// <summary>
+    /// Bandwidth limit for this period (bytes)
+    /// </summary>
+    public long BandwidthLimit { get; set; }
+
+    /// <summary>
+    /// Transforms limit for this period (count)
+    /// </summary>
+    public int TransformsLimit { get; set; }
+
+    /// <summary>
+    /// Storage limit for this period (bytes)
+    /// </summary>
+    public long StorageLimit { get; set; }
+
+    /// <summary>
     /// Created timestamp
     /// </summary>
     public DateTimeOffset CreatedAt { get; set; }
