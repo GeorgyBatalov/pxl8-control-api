@@ -15,6 +15,7 @@ public class ControlDbContext : DbContext
     public DbSet<BillingPeriod> BillingPeriods => Set<BillingPeriod>();
     public DbSet<BudgetLease> BudgetLeases => Set<BudgetLease>();
     public DbSet<UsageReport> UsageReports => Set<UsageReport>();
+    public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -88,6 +89,24 @@ public class ControlDbContext : DbContext
             entity.HasIndex(e => e.ReportId).IsUnique().HasDatabaseName("ix_usage_reports_report_id");
             entity.HasIndex(e => new { e.TenantId, e.PeriodId, e.ReceivedAt })
                 .HasDatabaseName("ix_usage_reports_tenant_period_received");
+        });
+
+        // User
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.ToTable("users");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Email).HasColumnName("email").HasMaxLength(255).IsRequired();
+            entity.Property(e => e.PasswordHash).HasColumnName("password_hash").HasMaxLength(255).IsRequired();
+            entity.Property(e => e.Role).HasColumnName("role").HasConversion<string>().HasMaxLength(50).IsRequired();
+            entity.Property(e => e.TenantId).HasColumnName("tenant_id");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+
+            // Indexes
+            entity.HasIndex(e => e.Email).IsUnique().HasDatabaseName("ix_users_email");
+            entity.HasIndex(e => e.TenantId).HasDatabaseName("ix_users_tenant_id");
         });
     }
 }
