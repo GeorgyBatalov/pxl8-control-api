@@ -12,6 +12,9 @@ public class ControlDbContext : DbContext
     {
     }
 
+    public DbSet<Tenant> Tenants => Set<Tenant>();
+    public DbSet<Domain> Domains => Set<Domain>();
+    public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
     public DbSet<BillingPeriod> BillingPeriods => Set<BillingPeriod>();
     public DbSet<BudgetLease> BudgetLeases => Set<BudgetLease>();
     public DbSet<UsageReport> UsageReports => Set<UsageReport>();
@@ -20,6 +23,67 @@ public class ControlDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Tenant
+        modelBuilder.Entity<Tenant>(entity =>
+        {
+            entity.ToTable("tenants");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Name).HasColumnName("name").HasMaxLength(255).IsRequired();
+            entity.Property(e => e.Email).HasColumnName("email").HasMaxLength(255).IsRequired();
+            entity.Property(e => e.IsActive).HasColumnName("is_active");
+            entity.Property(e => e.SuspensionReason).HasColumnName("suspension_reason").HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+
+            // Indexes
+            entity.HasIndex(e => e.Email).HasDatabaseName("ix_tenants_email");
+            entity.HasIndex(e => e.IsActive).HasDatabaseName("ix_tenants_is_active");
+        });
+
+        // Domain
+        modelBuilder.Entity<Domain>(entity =>
+        {
+            entity.ToTable("domains");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.TenantId).HasColumnName("tenant_id");
+            entity.Property(e => e.DomainName).HasColumnName("domain_name").HasMaxLength(255).IsRequired();
+            entity.Property(e => e.IsVerified).HasColumnName("is_verified");
+            entity.Property(e => e.VerificationMethod).HasColumnName("verification_method").HasMaxLength(10);
+            entity.Property(e => e.VerificationToken).HasColumnName("verification_token").HasMaxLength(100);
+            entity.Property(e => e.VerifiedAt).HasColumnName("verified_at");
+            entity.Property(e => e.IsActive).HasColumnName("is_active");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+
+            // Indexes
+            entity.HasIndex(e => e.DomainName).IsUnique().HasDatabaseName("ix_domains_domain_name");
+            entity.HasIndex(e => e.TenantId).HasDatabaseName("ix_domains_tenant_id");
+        });
+
+        // ApiKey
+        modelBuilder.Entity<ApiKey>(entity =>
+        {
+            entity.ToTable("api_keys");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.TenantId).HasColumnName("tenant_id");
+            entity.Property(e => e.KeyHash).HasColumnName("key_hash").HasMaxLength(255).IsRequired();
+            entity.Property(e => e.Name).HasColumnName("name").HasMaxLength(255).IsRequired();
+            entity.Property(e => e.IsActive).HasColumnName("is_active");
+            entity.Property(e => e.LastUsedAt).HasColumnName("last_used_at");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
+
+            // Indexes
+            entity.HasIndex(e => e.TenantId).HasDatabaseName("ix_api_keys_tenant_id");
+            entity.HasIndex(e => new { e.TenantId, e.IsActive }).HasDatabaseName("ix_api_keys_tenant_active");
+        });
 
         // BillingPeriod
         modelBuilder.Entity<BillingPeriod>(entity =>
